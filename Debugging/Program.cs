@@ -108,7 +108,7 @@ namespace Debugging
             // ==========================================================================
             // Demo 5: Image
             // ==========================================================================
-            img = doc.addImage("../../demo5.jpg", ImageFileType.Jpg);
+            img = doc.addImage("demo5.jpg", ImageFileType.Jpg);
             // You may set the width only, and let the height be automatically adjusted
             // to keep aspect ratio.
             img.Width = 130;
@@ -206,8 +206,9 @@ namespace Debugging
             // ==========================================================================
             // Open the RTF file we just saved
             // ==========================================================================
-            var p = new Process {StartInfo = {FileName = "Demo.rtf"}};
+            var p = new Process {StartInfo = {FileName = "Demo.rtf", UseShellExecute = true } };
             p.Start();
         }
+
     }
 }

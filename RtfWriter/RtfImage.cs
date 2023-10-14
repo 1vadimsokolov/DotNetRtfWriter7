@@ -1,9 +1,7 @@
+using SixLabors.ImageSharp;
 using System;
-using System.Configuration;
-using System.Text;
-using System.Drawing;
 using System.IO;
-using Image = System.Drawing.Image;
+using System.Text;
 
 namespace Elistia.DotNetRtfWriter
 {
@@ -12,7 +10,6 @@ namespace Elistia.DotNetRtfWriter
     /// </summary>
     public class RtfImage : RtfBlock
     {
-        private string _imgFname;
         private ImageFileType _imgType;
         private Byte[] _imgByte;
         private Align _alignment;
@@ -27,7 +24,6 @@ namespace Elistia.DotNetRtfWriter
 
         internal RtfImage(string fileName, ImageFileType type)
         {
-            _imgFname = fileName;
             _imgType = type;
             _alignment = Align.None;
             _margins = new Margins();
@@ -36,20 +32,20 @@ namespace Elistia.DotNetRtfWriter
             _blockTail = @"}";
             _startNewPage = false;
             _startNewPara = false;
-            
-            Image image = Image.FromFile(fileName);
-            _width = (image.Width / image.HorizontalResolution) * 72;
-            _height = (image.Height / image.VerticalResolution) * 72;
+
+            Image image = Image.Load(fileName);
+            _width = (float)(image.Width / image.Metadata.HorizontalResolution) * 72;
+            _height = (float)(image.Height / image.Metadata.VerticalResolution) * 72;
 
             using (MemoryStream mStream = new MemoryStream())
             {
-                image.Save(mStream, image.RawFormat);
+                image.Save(mStream, image.Metadata.DecodedImageFormat);
                 _imgByte = mStream.ToArray();
             }
         }
 
 
-        internal RtfImage(System.IO.MemoryStream imageStream)
+        internal RtfImage(MemoryStream imageStream)
         {
             _alignment = Align.Left;
             _margins = new Margins();
@@ -61,14 +57,19 @@ namespace Elistia.DotNetRtfWriter
 
             _imgByte = imageStream.ToArray();
 
-            Image image = Image.FromStream(imageStream);
-            _width = (image.Width / image.HorizontalResolution) * 72;
-            _height = (image.Height / image.VerticalResolution) * 72;
+            Image image = Image.Load(imageStream);
+            _width = (image.Width / image.Bounds.Width) * 72;
+            _height = (image.Height / image.Bounds.Height) * 72;
 
-            if(image.RawFormat.Equals(System.Drawing.Imaging.ImageFormat.Png)) _imgType = ImageFileType.Png;
-            else if (image.RawFormat.Equals(System.Drawing.Imaging.ImageFormat.Jpeg)) _imgType = ImageFileType.Jpg;
-            else if (image.RawFormat.Equals(System.Drawing.Imaging.ImageFormat.Gif)) _imgType = ImageFileType.Gif;
-            else throw new Exception("Image format is not supported: " + image.RawFormat.ToString());
+            if (image.Metadata.DecodedImageFormat?.Name.ToUpper() == "PNG")
+                _imgType = ImageFileType.Png;
+            else if (image.Metadata.DecodedImageFormat?.Name == "JPEG")
+                _imgType = ImageFileType.Jpg;
+            else if (image.Metadata.DecodedImageFormat?.Name == "GIF")
+                _imgType = ImageFileType.Gif;
+
+            else throw new Exception("Image format is not supported: " + image.Metadata.DecodedImageFormat?.Name);
+
         }
 
 
@@ -124,7 +125,8 @@ namespace Elistia.DotNetRtfWriter
             }
             set
             {
-                if (_keepAspectRatio && _width > 0) {
+                if (_keepAspectRatio && _width > 0)
+                {
                     float ratio = _height / _width;
                     _height = value * ratio;
                 }
@@ -140,14 +142,15 @@ namespace Elistia.DotNetRtfWriter
             }
             set
             {
-                if (_keepAspectRatio && _height > 0) {
+                if (_keepAspectRatio && _height > 0)
+                {
                     float ratio = _width / _height;
                     _width = value * ratio;
                 }
                 _height = value;
             }
         }
-        
+
         public bool KeepAspectRatio
         {
             get
@@ -181,7 +184,7 @@ namespace Elistia.DotNetRtfWriter
                 }
                 result.AppendFormat("{0:x2}", _imgByte[i]);
             }
-            
+
             return result.ToString();
         }
 
@@ -205,23 +208,29 @@ namespace Elistia.DotNetRtfWriter
         {
             StringBuilder result = new StringBuilder(_blockHead);
 
-            if (_startNewPage) {
+            if (_startNewPage)
+            {
                 result.Append(@"\pagebb");
             }
 
-            if (_margins[Direction.Top] >= 0) {
+            if (_margins[Direction.Top] >= 0)
+            {
                 result.Append(@"\sb" + RtfUtility.pt2Twip(_margins[Direction.Top]));
             }
-            if (_margins[Direction.Bottom] >= 0) {
+            if (_margins[Direction.Bottom] >= 0)
+            {
                 result.Append(@"\sa" + RtfUtility.pt2Twip(_margins[Direction.Bottom]));
             }
-            if (_margins[Direction.Left] >= 0) {
+            if (_margins[Direction.Left] >= 0)
+            {
                 result.Append(@"\li" + RtfUtility.pt2Twip(_margins[Direction.Left]));
             }
-            if (_margins[Direction.Right] >= 0) {
+            if (_margins[Direction.Right] >= 0)
+            {
                 result.Append(@"\ri" + RtfUtility.pt2Twip(_margins[Direction.Right]));
             }
-            switch (_alignment) {
+            switch (_alignment)
+            {
                 case Align.Left:
                     result.Append(@"\ql");
                     break;
@@ -235,21 +244,28 @@ namespace Elistia.DotNetRtfWriter
             result.AppendLine();
 
             result.Append(@"{\*\shppict{\pict");
-            if (_imgType == ImageFileType.Jpg) {
+            if (_imgType == ImageFileType.Jpg)
+            {
                 result.Append(@"\jpegblip");
-            } else if (_imgType == ImageFileType.Png || _imgType == ImageFileType.Gif) {
+            }
+            else if (_imgType == ImageFileType.Png || _imgType == ImageFileType.Gif)
+            {
                 result.Append(@"\pngblip");
-            } else {
+            }
+            else
+            {
                 throw new Exception("Image type not supported.");
             }
-            if (_height > 0) {
+            if (_height > 0)
+            {
                 result.Append(@"\pichgoal" + RtfUtility.pt2Twip(_height));
             }
-            if (_width > 0) {
+            if (_width > 0)
+            {
                 result.Append(@"\picwgoal" + RtfUtility.pt2Twip(_width));
             }
             result.AppendLine();
-            
+
             result.AppendLine(extractImage());
             result.AppendLine("}}");
             if (_startNewPara) result.Append(@"\par");

@@ -14,11 +14,11 @@
     <AssemblyTitle>DotNetRtfWriter7</AssemblyTitle>
     <Description>.NET 7 Library to generate RTF document.</Description>
     <Product>DotNetRtfWriter7</Product>
-    <AssemblyVersion>7.0.0.0</AssemblyVersion>
+    <AssemblyVersion>7.0.0.1</AssemblyVersion>
     <FileVersion>7.0.0.0</FileVersion>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Version>7.0.0</Version>
+    <Version>7.0.1</Version>
     <Authors>Loopy Dispatcher</Authors>
     <Company />
     <PackageReadmeFile>README.md</PackageReadmeFile>
@@ -41,6 +41,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="SixLabors.ImageSharp" Version="3.0.2" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.7" />
   </ItemGroup>
 </Project>

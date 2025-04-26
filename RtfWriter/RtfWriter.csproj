@@ -15,7 +15,7 @@
     <Description>.NET 7 Library to generate RTF document.</Description>
     <Product>DotNetRtfWriter7</Product>
     <AssemblyVersion>7.0.0.1</AssemblyVersion>
-    <FileVersion>7.0.0.0</FileVersion>
+    <FileVersion>7.0.0.1</FileVersion>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Version>7.0.1</Version>
